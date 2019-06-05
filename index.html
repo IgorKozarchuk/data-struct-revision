@@ -7,6 +7,7 @@
 		<style>
 			body, a {
 				font-family: "Source Code Pro", monospace;
+				font-size: 16px;
 				background-color: #222;
 				color: #2083FC;
 			}
@@ -16,6 +17,12 @@
 				padding-bottom: 2%;
 			}
 			h3 {
+				text-decoration: underline;
+			}
+			a {
+				text-decoration: none;
+			}
+			a:hover {
 				text-decoration: underline;
 			}
 			code {
@@ -34,18 +41,211 @@
 		<div id="contents">
 			<h2>Contents</h2>
 			<ol>
-				<li><a href="#array">Arrays</a></li>
-				
+				<li><a href="#array">Array</a></li>
+				<li><a href="#list">Linked List</a></li>
 			</ol>
 		</div>
 
-		<h3 id="array">1. Arrays</h3>
-		<p><b>Idea:</b> use </p>
+		<h3 id="array">1. Array</h3>
+		<p><b>Idea:</b> An array is a composite data type - it can store multiple values, and so is in the collection category. The stored values are called elements and are accessed by a sequence of indices.<br>
+		The implementation of arrays is based on setting the bounds of indices of the array, the size of the array, normally by allocating a contiguous region of memory to hold the elements of the array, and using simple offset calculations on the indices from the origin of the memory to access memory elements.<br>
+		Common operations defined on arrays include: 1) indexing (accessing an array element by its indices); 2) slicing (producing a subarray by putting some constraint on the indices); 3) iteration over the array's elements.<br>
+		Access is O(1), appending is O(1), and insertion is O(n) for a single item.
+		</p>
+
+		<h3 id="list">2. Linked List</h3>
+		<p><b>Idea:</b> A linked list is a collection of nodes that form linear sequence. Each node contains data and reference (link) to another nodes.<br>
+		Linked lists have a "head" (the first node in the list) and sometimes a "tail" (the last node).<br>
+		A <b>singly-linked list</b> allows traversal in one direction - forward. Each node contains a link to the next node. The last node points to null. Singly-linked list has O(1) insertion time [insertion itself is O(1), but node finding is O(n)] and O(n) removal time.<br>
+		A <b>doubly-linked list</b> allows traversal in two directions - forward and back. Each node contains links to both the previous and next nodes. Doubly-linked list has O(1) removal and insertion times.</p>
 <code>
-	if (n & 1) // n is odd
+	/* Singly-linked list */
+	
+	// node of the list
+	function Node(data) {
+		this.data = data; // node's data
+		this.next = null; // pointer (link) to the next node
+	}
+	// singly-linked list
+	function SLList() {
+		this.head = new Node("head");
+		this.append = append;
+		this.prepend = prepend;
+		this.insertAfter = insertAfter;
+		this.insertBefore = insertBefore;
+		this.remove = remove;
+		this.print = print;
+		// helper functions
+		this.find = find;
+		this.findPrev = findPrev;
+	}
+
+	// find node with data == item
+	function find(item) {
+		var current = this.head;
+		while (current.data != item) {
+			current = current.next;
+		}
+		return current;
+	}
+	// find previous node to node with data == item
+	function findPrev(item) {
+		var current = this.head;
+		while (current.next.data != item) {
+			current = current.next;
+		}
+		return current;
+	}
+	// add element to the end
+	function append(element) {
+		var newEnd = new Node(element);
+		// find last
+		var current = this.head;
+		while (current.next != null) {
+			current = current.next;
+		}
+		current.next = newEnd;
+	}
+	// add element to the beginning
+	function prepend(element) {
+		var newHead = new Node(element);
+		newHead.next = this.head.next;
+		this.head.next = newHead;
+	}
+	// insert element after specific item
+	function insertAfter(element, item) {
+		var newNode = new Node(element);
+		var current = this.find(item);
+		newNode.next = current.next;
+		current.next = newNode;
+	}
+	// insert element before specific item
+	function insertBefore(element, item) {
+		var newNode = new Node(element);
+		var current = this.findPrev(item);
+		newNode.next = current.next;
+		current.next = newNode;
+	}
+	// remove node with data == item
+	function remove(item) {
+		var current = this.findPrev(item);
+		// link prev node to the node after item
+		if (current.next != null) {
+			current.next = current.next.next;
+		}
+	}
+	// print list
+	function print() {
+		var current = this.head;
+		while (current.next != null) {
+			console.log(current.next.data);
+			current = current.next;
+		}
+	}
 </code>
 		
-		
+		<script>
+			/* Singly-linked list */
+			
+			// node of the list
+			function Node(data) {
+				this.data = data; // node's data
+				this.next = null; // pointer (link) to the next node
+			}
+			// singly-linked list
+			function SLList() {
+				this.head = new Node("head");
+				this.append = append;
+				this.prepend = prepend;
+				this.insertAfter = insertAfter;
+				this.insertBefore = insertBefore;
+				this.remove = remove;
+				this.print = print;
+				// helper functions
+				this.find = find;
+				this.findPrev = findPrev;
+			}
+
+			// find node with data == item
+			function find(item) {
+				var current = this.head;
+				while (current.data != item) {
+					current = current.next;
+				}
+				return current;
+			}
+			// find previous node to node with data == item
+			function findPrev(item) {
+				var current = this.head;
+				while (current.next.data != item) {
+					current = current.next;
+				}
+				return current;
+			}
+			// add element to the end
+			function append(element) {
+				var newEnd = new Node(element);
+				// find last
+				var current = this.head;
+				while (current.next != null) {
+					current = current.next;
+				}
+				current.next = newEnd;
+			}
+			// add element to the beginning
+			function prepend(element) {
+				var newHead = new Node(element);
+				newHead.next = this.head.next;
+				this.head.next = newHead;
+			}
+			// insert element after specific item
+			function insertAfter(element, item) {
+				var newNode = new Node(element);
+				var current = this.find(item);
+				newNode.next = current.next;
+				current.next = newNode;
+			}
+			// insert element before specific item
+			function insertBefore(element, item) {
+				var newNode = new Node(element);
+				var current = this.findPrev(item);
+				newNode.next = current.next;
+				current.next = newNode;
+			}
+			// remove node with data == item
+			function remove(item) {
+				var current = this.findPrev(item);
+				// link prev node to the node after item
+				if (current.next != null) {
+					current.next = current.next.next;
+				}
+			}
+			// print list
+			function print() {
+				var current = this.head;
+				while (current.next != null) {
+					console.log(current.next.data);
+					current = current.next;
+				}
+			}
+
+			// test
+			var cities = new SLList();
+			cities.prepend("Kyiv");
+			cities.print(); // Kyiv
+			console.log("_____");
+			cities.append("Moscow");
+			cities.print(); // Kyiv, Moscow
+			console.log("_____");
+			cities.insertAfter("Paris", "Kyiv"); // Kyiv, Paris, Moscow
+			cities.print();
+			console.log("_____");
+			cities.insertBefore("Tokyo", "Paris"); // Kyiv, Tokyo, Paris, Moscow
+			cities.print();
+			console.log("_____");
+			cities.remove("Tokyo"); // Kyiv, Paris, Moscow
+			cities.print();
+		</script>
 
 	</body>
 </html>
