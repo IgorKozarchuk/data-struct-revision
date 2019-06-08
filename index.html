@@ -45,6 +45,7 @@
 				<li><a href="#list">Linked List</a></li>
 				<li><a href="#queue">Queue</a></li>
 				<li><a href="#stack">Stack</a></li>
+				<li><a href="#tree">Binary Search Tree</a></li>
 			</ol>
 		</div>
 
@@ -62,7 +63,6 @@
 		A <b>doubly-linked list</b> allows traversal in two directions - forward and back. Each node contains links to both the previous and next nodes. Doubly-linked list has O(1) removal and insertion times.</p>
 <code>
 	/* Singly-linked list */
-	
 	// node of the list
 	function Node(data) {
 		this.data = data; // node's data
@@ -81,7 +81,6 @@
 		this.find = find;
 		this.findPrev = findPrev;
 	}
-
 	// find node with data == item
 	function find(item) {
 		var current = this.head;
@@ -147,7 +146,7 @@
 </code>
 
 		<h3 id="queue">3. Queue</h3>
-		<p><b>Idea:</b> A queue is a linear FIFO (First-In-First-Out) data structure. That is, elements are added (enqueued) at one side and removed (dequeued) from the other in the order of insertion. <br>
+		<p><b>Idea:</b> A queue is a linear FIFO (First-In-First-Out) abstract data structure. That is, elements are added (enqueued) at one side and removed (dequeued) from the other in the order of insertion.<br>
 		Space and search complexity is O(n), insertion/deletion is O(1).</p>
 <code>
 	// Queue implementation using circular array
@@ -225,10 +224,64 @@
 </code>
 
 		<h3 id="stack">4. Stack</h3>
-		<p><b>Idea:</b> </p>
+		<p><b>Idea:</b> A stack is a linear LIFO (Last-In-First-Out) abstract data structure. That is, elements are added (pushed) and removed (poped) from one end called top of the stack.<br>
+		Space and search complexity is O(n), insertion/deletion is O(1).</p>
 <code>
-	
+	// Stack implementation using array
+	// https://www.youtube.com/watch?v=sFVxsglODoo
+	function Stack(size = 5) {
+		this.SIZE = size;
+		this.data = new Array(this.SIZE);
+		// top of the stack, -1 represents empty stack
+		this.topIndex = -1;
+		this.push = push;
+		this.pop = pop;
+		this.topElem = topElem;
+		this.isEmpty = isEmpty;
+		this.isFull = isFull;
+		this.print = print;
+	}
+	// add item to stack
+	function push(item) {
+		if (this.isFull()) {
+			console.log("Error: stack overflow");
+			return;
+		}
+		this.topIndex++;
+		this.data[this.topIndex] = item;
+	}
+	// remove item from stack
+	function pop() {
+		if (this.isEmpty()) {
+			console.log("Error: no element to pop");
+		}
+		this.topIndex--;
+	}
+	// return top item
+	function topElem() {
+		return this.data[this.topIndex];
+	}
+	// check if stack is empty
+	function isEmpty() {
+		return (this.topIndex == -1);
+	}
+	// check if stack is full
+	function isFull() {
+		return (this.topIndex == this.SIZE - 1);
+	}
+	// print stack
+	function print() {
+		if (this.isEmpty()) return;
+		var i = this.topIndex;
+		while (i >= 0) {
+			console.log(this.data[i]);
+			i--;
+		}
+	}
 </code>
+
+		<h3 id="tree">5. Binary Search Tree</h3>
+		<p><b>Idea:</b> A tree</p>
 		
 		<script>
 			
