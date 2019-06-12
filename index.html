@@ -45,7 +45,8 @@
 				<li><a href="#list">Linked List</a></li>
 				<li><a href="#queue">Queue</a></li>
 				<li><a href="#stack">Stack</a></li>
-				<li><a href="#tree">Binary Search Tree</a></li>
+				<li><a href="#bst">Binary Search Tree</a></li>
+				<li><a href="#rbt">Red-Black Tree</a></li>
 			</ol>
 		</div>
 
@@ -280,225 +281,213 @@
 	}
 </code>
 
-		<h3 id="tree">5. Binary Search Tree</h3>
+		<h3 id="bst">5. Binary Search Tree</h3>
 		<p><b>Idea:</b> A <b>tree</b> is a revursive data structure with a root and one or more children - nodes which may have thier own subtrees. Number of direct descendants of the node defines its power (order). Max power of the nodes define the power of the tree. A tree is perfectly balanced if for every node number of nodes in left and right subtrees differs by no more than 1.<br>
 		<b>Binary tree</b> is a set of nodes that consits of a root and two children - left and right binary subtrees.<br>
 		<b>Binary search tree (BST)</b> is ordered data structure which has the following properties: 1) left subtree of a node contains only nodes with keys lesser than or equal to the node’s key; 2) right subtree of a node contains only nodes with keys greater than the node’s key; 3) left and right subtree each must also be a binary search tree.<br>
 		<b>Balanced tree</b> (<b>AVL tree</b> - Adelson-Velsky and Landis) is a self-balancing binary search tree where the heights of the two child subtrees of any node differ by at most one; if at any time they differ by more than one, rebalancing is done to restore this property.<br>
 		Search, insertion and deletion is O(log n) in average case and O(n) in worst case. Space is O(n).</p>
 <code>
+	// https://www.youtube.com/watch?v=pYT9F8_LFTM
+	// https://www.youtube.com/watch?v=COZK7NATh4k
+	// https://www.freecodecamp.org/news/data-structures-101-binary-search-tree-398267b6bff0/
+
+	// node
+	function Node(data) {
+		this.data = data;
+		this.left = null; // link to the left child
+		this.right = null; // link to the right child
+	}
+	// tree
+	function BSTree() {
+		this.root = null;
+	}
+	// insert node (recursive)
+	BSTree.prototype.insertRec = function(data) {
+		var node = new Node(data);
+		var insertRecHelper = function(root, node) {
+			if (node.data <= root.data) { // go to the left subtree
+				// we've reached a leaf node, insert 
+				if (root.left === null) root.left = node;
+				else insertRecHelper(root.left, node);
+			} else { // go to the right subtree
+				if (root.right === null) root.right = node;
+				else insertRecHelper(root.right, node);
+			}
+		}
+		// if tree is empty
+		if (this.root === null) this.root = node;
+		// if tree is not empty
+		else insertRecHelper(this.root, node);
+	}
+	// insert node (non-recursive)
+	BSTree.prototype.insert = function(data) {
+		var node = new Node(data);
+		// if tree is empty
+		if (this.root === null) this.root = node;
+		else { // if tree is not empty
+			var current = this.root;
+			while (current) {
+				// go down to left subtree
+				if (node.data <= current.data) {
+					if (current.left === null) {
+						current.left = node;
+						break;
+					}
+					current = current.left;
+				}
+				// go down to right subtree
+				else if (node.data > current.data) {
+					if (current.right === null) {
+						current.right = node;
+						break;
+					}
+					current = current.right;
+				} else break;
+			}
+		}
+	};
+	// remove node
+	BSTree.prototype.remove = function(data) {
+		var that = this;
+		var removeNode = function(node, data) {
+			if (node === null) return null; // tree is empty
+			if (data < node.data) { // go left subtree
+				node.left = removeNode(node.left, data);
+				return node;
+			} else if (data > node.data) { // go right subtree
+				node.right = removeNode(node.right, data);
+				return node;
+			}	else { // data == node data
+				// case 1: node has no children
+				if (node.left === null && node.right === null) {
+					node = null;
+					return null;
+				}
+				// case 2: 1 child
+				if (node.left === null) { // right child
+					node = node.right;
+					return node;
+				}
+				if (node.right === null) { // left child
+					node = node.left;
+					return node;
+				}
+				// case 3: 2 children
+				// find left-most node of right subtree (min)
+				// or right-most child of left subtree (max)
+				var temp = that.getMin(node.right);
+				node.data = temp;
+				node.right = removeNode(node.right, temp);
+				return node;
+			} 
+		};
+		this.root = removeNode(this.root, data);
+	};
+	// get minimum value - find the leftmost node of left subtree
+	BSTree.prototype.getMin = function(node) {
+		if (!node) node = this.root;
+		while (node.left) node = node.left;
+		return node.data;
+	};
+	// get maximum value - find the righttmost node of right subtree
+	BSTree.prototype.getMax = function() {
+		var node = this.root;
+		while (node.right) node = node.right;
+		return node.data;
+	};
+	// check if tree contains a node
+	BSTree.prototype.contains = function(data) {
+		var current = this.root;
+		while (current) {
+			if (data === current.data) return true;
+			if (data <= current.data) current = current.left;
+			else current = current.right;
+		}
+		return false;
+	};
+	// height of the three
+	BSTree.prototype.getHeight = function(node=this.root) {
+		if (!node) return -1;
+		var left = this.getHeight(node.left);
+		var right = this.getHeight(node.right);
+		return Math.max(left, right) + 1;
+	};
+	// root-left-right traverse
+	BSTree.prototype.preOrder = function(node, func) {
+		if (node) {
+			if (func) func(node); // root
+			this.preOrder(node.left, func); // left child
+			this.preOrder(node.right, func); // right child
+		}
+	};
+	// left-root-right traverse (smallest to largest in this case)
+	BSTree.prototype.inOrder = function(node, func) {
+		if (node) {
+			this.inOrder(node.left, func); // left child
+			if (func) func(node); // root
+			this.inOrder(node.right, func); // right child
+		}
+	};
+	// left-right-root traverse
+	BSTree.prototype.postOrder = function(node, func) {
+		if (node) {
+			this.postOrder(node.left, func); // left child
+			this.postOrder(node.right, func); // right child
+			if (func) func(node); // root
+		}
+	};
+	// Depth-First Search
+	BSTree.prototype.traverseDFS = function(func, method) {
+		var current = this.root;
+		if (method) this[method](current, func);
+		else this.preOrder(current, func);
+	};
+	// Breadth-First Search
+	BSTree.prototype.traverseBFS = function(func) {
+		this.queue = [];
+		this.queue.push(this.root);
+		while (this.queue.length) {
+			var node = this.queue.shift();
+			if (func) func(node);
+			if (node.left) this.queue.push(node.left);
+			if (node.right) this.queue.push(node.right);
+		}
+	};
+	// size - number of elements
+	BSTree.prototype.size = function() {
+		var length = 0;
+		this.traverseDFS(function(node) {
+			length++;
+		}, "inOrder");
+		return length;
+	};
+	// print
+	BSTree.prototype.print = function() {
+		var newLine = new Node("|");
+		var queue = [this.root, newLine];
+		var string = "";
+		while (queue.length) {
+			var node = queue.shift();
+			string += node.data.toString() + " ";
+			if (node === newLine && queue.length) {
+				queue.push(newLine);
+			}
+			if (node.left) queue.push(node.left);
+			if (node.right) queue.push(node.right);
+		}
+		console.log(string.slice(0, -2).trim());
+	};
+</code>
+
+		<h3 id="rbt">6. Red-Black Tree</h3>
+		<p><b>Idea:</b> ...</p>
+<code>
 	
 </code>
 
 		<script>
-			// https://www.youtube.com/watch?v=pYT9F8_LFTM
-			// https://www.youtube.com/watch?v=COZK7NATh4k
-			// https://www.freecodecamp.org/news/data-structures-101-binary-search-tree-398267b6bff0/
-
-			// node
-			function Node(data) {
-				this.data = data;
-				this.left = null; // link to the left child
-				this.right = null; // link to the right child
-			}
-			// tree
-			function BSTree() {
-				this.root = null;
-			}
-			// insert a node (recursive)
-			BSTree.prototype.insertRec = function(data) {
-				var node = new Node(data);
-				var insertRecHelper = function(root, node) {
-					if (node.data <= root.data) { // go to the left subtree
-						// we've reached a leaf node, insert 
-						if (root.left === null) root.left = node;
-						else insertRecHelper(root.left, node);
-					} else { // go to the right subtree
-						if (root.right === null) root.right = node;
-						else insertRecHelper(root.right, node);
-					}
-				}
-				// if tree is empty
-				if (this.root === null) this.root = node;
-				// if tree is not empty
-				else insertRecHelper(this.root, node);
-			}
-			// insert node (non-recursive)
-			BSTree.prototype.insert = function(data) {
-				var node = new Node(data);
-				// if tree is empty
-				if (this.root === null) this.root = node;
-				else { // if tree is not empty
-					var current = this.root;
-					while (current) {
-						// go down to left subtree
-						if (node.data <= current.data) {
-							if (current.left === null) {
-								current.left = node;
-								break;
-							}
-							current = current.left;
-						}
-						// go down to right subtree
-						else if (node.data > current.data) {
-							if (current.right === null) {
-								current.right = node;
-								break;
-							}
-							current = current.right;
-						} else break;
-					}
-				}
-			};
-			// remove node
-			BSTree.prototype.removeNode = function(node, data) {
-				// if the root is null then tree is empty
-				if (node === null) return null;
-				// if data to be deleted is less than
-				// root data then move to left subtree
-				else if (data < node.data) {
-					node.left = this.removeNode(node.left, data);
-					return node;
-				}
-				// if data to be delete is greater than
-				// roots data then move to right subtree
-				else if (data > node.data) {
-					node.right = this.removeNode(node.right, data);
-					return node;
-				}
-				// if data is similar to the root's data
-				// then delete this node
-				else {
-					// deleting node with no children
-					if (node.left === null && node.right === null) {
-						node = null;
-						return node;
-					}
-					// deleting node with one children
-					if (node.left === null) {
-						node = node.right;
-						return node;
-					}
-					else if (node.right === null) {
-						node = node.left;
-						return node;
-					}
-					// deleting node with two children
-					// minumum node of the rigt subtree
-					// is stored in temp
-					var temp = this.findMinNode(node.right);
-					node.data = temp.data;
-					node.right = this.removeNode(node.right, temp.data);
-					return node;
-				}
-			}
-			BSTree.prototype.remove = function(data) {
-				this.root = this.removeNode(this.root, data);
-			};
-			BSTree.prototype.findMinNode = function(node) { 
-				// if left of a node is null
-				// then it must be minimum node
-				if (node.left === null) return node;
-				else return this.findMinNode(node.left);
-			};
-
-			// BSTree.prototype.remove = function(data) {
-			// 	var that = this;
-			// 	var removeNode = function(node, data) {
-			// 		if (node === null) return null; // tree is empty
-			// 		if (data === node.data) {
-			// 			// case 1: node has no children
-			// 			if (node.left === null && node.right === null) {
-			// 				node = null;
-			// 				return null;
-			// 			}
-			// 			// case 2: 1 child
-			// 			if (node.left === null) return node.right; // right child
-			// 			if (node.right === null) return node.left; // left child
-			// 			// case 3: 2 children
-			// 			// find left-most node of right subtree (min)
-			// 			// or right-most child of left subtree (max)
-			// 			var temp = that.getMin(node.right);
-			// 			node.data = temp;
-			// 			node.right = removeNode(node.right, temp);
-			// 			return node;
-			// 		} else if (data <= node.data) { // go left subtree
-			// 			node.left = removeNode(node.left, data);
-			// 			return node;
-			// 		} else { // go right subtree
-			// 			node.right = removeNode(node.right, data);
-			// 			return node;
-			// 		}
-			// 	};
-			// 	this.root = removeNode(this.root, data);
-			// };
-			// check if tree contains a node
-			BSTree.prototype.contains = function(data) {
-				var current = this.root;
-				while (current) {
-					if (data === current.data) return true;
-					if (data <= current.data) current = current.left;
-					else current = current.right;
-				}
-				return false;
-			};
-			// get minimum value - find the leftmost node of left subtree
-			BSTree.prototype.getMin = function() {
-				var node = this.root;
-				while (node.left) node = node.left;
-				return node.data;
-			};
-			// get maximum value - find the righttmost node of right subtree
-			BSTree.prototype.getMax = function() {
-				var node = this.root;
-				while (node.right) node = node.right;
-				return node.data;
-			};
-			// height of the three
-			BSTree.prototype.getHeight = function(node=this.root) {
-				if (!node) return -1;
-				var left = this.getHeight(node.left);
-				var right = this.getHeight(node.right);
-				return Math.max(left, right) + 1;
-			};
-			// print
-			BSTree.prototype.print = function() {
-				var newLine = new Node("|");
-				var queue = [this.root, newLine];
-				var string = "";
-				while (queue.length) {
-					var node = queue.shift();
-					string += node.data.toString() + " ";
-					if (node === newLine && queue.length) {
-						queue.push(newLine);
-					}
-					if (node.left) {
-						queue.push(node.left);
-					}
-					if (node.right) {
-						queue.push(node.right);
-					}
-				}
-				console.log(string.slice(0, -2).trim());
-			};
-
-			// test
-			let bst = new BSTree();
-			bst.insert(25);
-			bst.insert(20);
-			bst.insert(22);
-			bst.insert(30);
-			bst.insertRec(30);
-			bst.insertRec(40);
-			console.log(bst.contains(30)); // true
-			console.log(bst.contains(3)); // false
-			console.log(bst.getMin()); // 20
-			console.log(bst.getMax()); // 30
-			console.log(bst.getHeight()); // 2
-			bst.print(); // 25 | 20 30 | 22 30 40
-			bst.remove(22);
-			bst.remove(30);
-			bst.print(); // 25 | 20 40 | 30
+			
 		</script>
 
 	</body>
