@@ -481,13 +481,54 @@
 </code>
 
 		<h3 id="rbt">6. Red-Black Tree</h3>
-		<p><b>Idea:</b> ...</p>
+		<p><b>Idea:</b> A red–black tree is a self-balancing binary search tree. Each node of the tree has an extra bit often interpreted as the color (red or black) of the node. These color bits are used to ensure the tree remains approximately balanced during insertions and deletions.<br>
+		Balance is preserved by painting each node with red or black color in a way that satisfies certain <b>properties</b>:<br>
+		1) Each node is either red or black.<br>
+		2) The root is black.<br>
+		3) All leaves (NULL nodes) are black.<br>
+		4) If a node is red, then both its children are black.<br>
+		5) Every path from a given node to any of its descendant NULL nodes contains the same number of black nodes.<br>
+		The balancing of the tree is not perfect, but it is good enough to allow searching in O(log n) time. The insertion and deletion operations, along with the tree rearrangement and recoloring, are also performed in O(log n) time.
+		</p>
 <code>
 	
 </code>
 
 		<script>
+			// https://www.youtube.com/watch?v=UaLIHuR1t8Q
+			// https://www.youtube.com/watch?v=CTvfzU_uNKE
+
+			// In Red-Black tree, we use 2 tools to do balancing:
+			// 1) recoloring
+			// 2) rotation
+			// Notation: new node X, it's parent P, grandparent G, uncle U
+
+			// The insertion algorithm has 2 main cases
+			// depending on the color of U:
+			// 1) if U = red, we do recoloring
+			// 2) if U = black, we do rotations and/or recoloring
 			
+			// Insertion algorithm:
+			// 1. Insert new node X and color it red
+			// 2. Recolor and rotate nodes to fix violations
+			// Four cases:
+			// 1) X = root -> color black
+			// 2) X.U = red -> recolor P, G, U
+			// 3) X.U = black (triangle) -> rotate X.P
+			// 4) X.U = black (line) -> rotate X.G & recolor
+
+			// Deletion algorithm:
+			// 1. Find the node to be deleted X using BST traversal
+			// 2. If X has 2 non-null children,
+			// replace it with its inorder successor,
+			// then delete successor
+			// 3. If X is red, delete it
+			// 4. If X is black with one red child,
+			// replace it with that child and
+			// change color of the child to black
+			// 5. Otherwise (X is black with 2 black null leaves)
+			// handle the double-black node situation with 6 cases
+
 		</script>
 
 	</body>
