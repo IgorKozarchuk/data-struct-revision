@@ -47,6 +47,7 @@
 				<li><a href="#stack">Stack</a></li>
 				<li><a href="#bst">Binary Search Tree</a></li>
 				<li><a href="#rbt">Red-Black Tree</a></li>
+				<li><a href="#hash">Hash Table</a></li>
 			</ol>
 		</div>
 
@@ -491,44 +492,516 @@
 		The balancing of the tree is not perfect, but it is good enough to allow searching in O(log n) time. The insertion and deletion operations, along with the tree rearrangement and recoloring, are also performed in O(log n) time.
 		</p>
 <code>
-	
+	// https://www.youtube.com/watch?v=UaLIHuR1t8Q
+	// https://www.youtube.com/watch?v=CTvfzU_uNKE
+
+	// In Red-Black tree, we use 2 tools to do balancing:
+	// 1) recoloring
+	// 2) rotation
+	// Notation: new node X, it's parent P, grandparent G, uncle U
+
+	// The insertion algorithm has 2 main cases
+	// depending on the color of U:
+	// 1) if U = red, we do recoloring
+	// 2) if U = black, we do rotations and/or recoloring
+
+	// Insertion algorithm:
+	// 1. Insert new node X and color it red
+	// 2. Recolor and rotate nodes to fix violations
+	// Four cases:
+	// 1) X = root -> color black
+	// 2) X.U = red -> recolor P, G, U
+	// 3) X.U = black (triangle) -> rotate X.P
+	// 4) X.U = black (line) -> rotate X.G & recolor
+
+	// Deletion algorithm:
+	// 1. Find the node to be deleted X using BST traversal
+	// 2. If X has 2 non-null children,
+	// replace it with its inorder successor,
+	// then delete successor
+	// 3. If X is red, delete it
+	// 4. If X is black with one red child,
+	// replace it with that child and
+	// change color of the child to black
+	// 5. Otherwise (X is black with 2 black null leaves)
+	// handle the double-black node situation with 6 cases
+
+	// https://medium.com/@julianknodt/red-black-trees-in-javascript-c20eec1d5d1c
+	const identity = i => i;
+	const RIGHT = 1;
+	const LEFT = 0;
+	const oppDir = dir => dir === RIGHT ? LEFT : RIGHT;
+
+	class BinaryTree {
+		constructor(value, identifier=identity) {
+			this.value = value;
+			this.children = [];
+			this.identifier = identifier;
+			this.parent = undefined;
+		}
+
+		get right() { return this.children[RIGHT]; }
+		get left() { return this.children[LEFT]; }
+		set right(value) { this.children[RIGHT] = value; }
+		set left(value) { this.children[LEFT] = value; }
+		get isRightChild() {
+			return this.parent ? this.parent.right === this : false;
+		}
+		get isLeftChild() {
+			return this.parent ? this.parent.left === this : false;
+		}
+		get isRoot() { return this.parent === undefined; }
+		get uncle() {
+			return this.grandparent ? (this.parent.isRightChild ? this.grandparent.left : this.grandparent.right) : undefined;
+		}
+		get sibling() {
+			return this.parent ? (this.isRightChild ? this.parent.left : this.parent.right) : undefined;
+		}
+		get grandparent() {
+			return this.parent ? this.parent.parent : undefined;
+		}
+		get isLeaf() {
+			return this.children.every(child => child === undefined);
+		}
+		get hasOneChild() {
+			return (this.right !== undefined && this.left === undefined)
+			|| (this.right === undefined && this.left !== undefined);
+		}
+		get hasTwoChildren() {
+			return (this.right !== undefined && this.left !== undefined);
+		}
+
+		_swapWithParent () {
+		//need to create a new node to replace old one;
+			let replacement = new BinaryTree(this.value, this.identifier);
+			replacement.parent = this.parent;
+			replacement.children = this.children;
+			if (this.parent !== undefined) {
+				if (this.isRightChild) {
+					this.parent.right =	replacement;
+				} else {
+					this.parent.left = replacement;
+				}
+			}
+			this.value = replacement.parent.value;
+			this.children = replacement.parent.children;
+			this.parent = replacement.parent.parent;
+			//update references to this
+			this.children.forEach(chiLd => {
+				if (child) child.parent = this;
+			});
+			//update references to replacement
+			this.children.forEach(child => {
+				if (child) child.children.forEach(kid => {
+					if (kid) kid.parent = child;
+				});
+			});
+		}
+
+		rotateRight() {
+			this._rotate(RIGHT);
+			this._swapWithParent();
+		}
+		rotateLeft() {
+			this._rotate(LEFT);
+			this._swapWithParent();
+		}
+		_rotate(dir) {
+			let opposite = oppDir(dir);
+			let pivot = this.children[opposite];
+			this.children[opposite]	= pivot.children[dir];
+			pivot.children[dir] = this;
+			pivot.parent = this.parent;
+			pivot.children.forEach(child => {
+				if (child) child.parent = pivot;
+			});
+			this.children.forEach(child => {
+				if (child) child.parent = this;
+			});
+		}
+
+		insert(value) {
+			if (this.value === undefined) {
+				this.value = value;
+				return this;
+			} else {
+				let dir;
+				if (this.identifier(value) > this.identifier(this.value)) {
+					dir = RIGHT;
+				} else dir = LEFT;
+				if (this.children[dir] === undefined) {
+					let newTree = new BinaryTree(value, this.identifier);
+					newTree.parent = this;
+					this.children[dir] = newTree;
+					return newTree;
+				} else {
+					return this.children[dir].insert(value);
+				}
+			}
+		}
+
+		find(value) {
+			let identifiedValue	= this.identifier(value);
+			let thisValue	= this.identifier(this.value);
+			if (thisValue === identifiedValue) {
+				return this.value;
+			} else {
+				let dir;
+				if (thisValue < identifiedValue) dir = RIGHT;
+				else dir = LEFT;
+				if (this.children[dir] === undefined) return undefined;
+				else return this.children[dir].find(value);
+			}
+		}
+
+		contains(value) {
+			return this.find(value) !== undefined;
+		}
+
+		_minimumChild() {
+			let current = this;
+			while (current.left !== undefined) {
+				current = current.left;
+			}
+			return current;
+		}
+		minimum() {
+			return this._minimumChild().value;
+		}
+
+		_maximumChild() {
+			let current = this;
+			while (current.right !== undefined) {
+				current = current.right;
+			}
+			return current;
+		}
+		maximum() {
+			return this._maximumChild().value;
+		}
+
+		remove(value) {
+			let identifiedValue = this.identifier(value);
+			let thisValue = this.identifier(this.value);
+			if (thisValue === identifiedValue) {
+				if (this.isLeaf) {
+					if (this.isRoot) {
+						this.value = undefined;
+					} else if (this.isRightChild) {
+						this.parent.right = undefined;
+					} else if (this.isLeftChild) {
+						this.parent.left = undefined;
+					}
+				} else if (this.hasOneChild) {
+					let rmDir = this.right ? LEFT : RIGHT;
+					this.right ? this.rotateLeft() : this.rotateRight();
+					this.children[rmDir] = undefined;
+				} else if (this.hasTwoChildren) {
+					let replacement = this.right._minimumChild();
+					this.value = replacement.value;
+					this.right.remove(replacement.value);
+				}
+			} else {
+				let dir;
+				if (thisValue < identifiedValue) dir = RIGHT;
+				else dir = LEFT;
+				if (this.children[dir] === undefined) return undefined;
+				else return this.children[dir].remove(value);
+			}
+		}
+	}
+
+	// Red-Black Tree
+	const BLACK = "b";
+	const RED = "r";
+	class RedBlackTree extends BinaryTree {
+		constructor(value, identifier=identity, color=BLACK) {
+			super(value, identifier);
+			this.color = color;
+		}
+
+		_swapWithParent() {
+			// need to create a new node to replace old one
+			let replacement = new RedBlackTree(this.value, this.identifier, this.color);
+			replacement.parent = this.parent;
+			replacement.children = this.children;
+			if (this.parent !== undefined) {
+				if (this.isRightChild) this.parent.right = replacement;
+				else this.parent.left	= replacement;
+			}
+			this.value = replacement.parent.value;
+			this.children = replacement.parent.children;
+			this.parent = replacement.parent.parent;
+			this.color = replacement.parent.color;
+			// update references to this
+			this.children.forEach(child => {
+				if (child) child.parent = this;
+			});
+			// update references to replacement
+			this.children.forEach(child => {
+				if (child) child.children.forEach(kid => {
+					if (kid) kid.parent = child;
+				});
+			});
+		}
+
+		paintBlack() { this.color = BLACK; }
+		paintRed() { this.color = RED; }
+
+		get isBlack() { return this.color === BLACK; }
+		get isRed() { return this.color === RED; }
+
+		paint() { return this._insert1(); }
+		// node is the root of the tree, paint it black
+		_insert1() {
+			if (this.parent === undefined) {
+				this.paintBlack();
+				return;
+			} else this._insert2();
+		}
+		// parent is black, leave the node as is
+		_insert2() {
+			if (this.parent.isBlack) return;
+			else this._insert3();
+		}
+		// If the parent is red and the uncle is red,
+		// repaint them both black, and repaint the grandparent red.
+		// In this case, the grandparent might violate some of the rules,
+		// for example if its parent is red.
+		// Thus, repaint the grandparent as if it was being inserted.
+		_insert3() {
+			let uncle = this.uncle;
+			if (uncle ? uncle.isRed : false) {
+				this.parent.paintBlack();
+				uncle.paintBlack();
+				this.grandparent.paintRed();
+				this.grandparent.paint();
+				return;
+			} else this._insert4();
+		}
+		// If the parent is red and the uncle is black
+		// (must be true because the previous case was not true),
+		// rotate the inserted node up, so that it now sits atop the parent.
+		// This will still leave both of these nodes red,
+		// violating the rule that every red must have two black children.
+		// This case will always continue to case five,
+		// where that issue will be resolved.
+		_insert4() {
+			if (this.isRightChild && this.parent.isLeftChild) {
+				this.parent.rotateLeft();
+				return;
+			} else if (this.isLeftChild && this.parent.isRightChild) {
+				this.parent.rotateRight();
+				return;
+			}
+			this._insert5();
+		}
+		// This case has the same scenario as the previous case,
+		// but here paint the inserted node’s grandparent black, and its parent red.
+		// Then (because of the guarantee that this is the left child
+		// if the parent is a left or vice-versa for right from the previous case)
+		// rotate the parent up and the grandparent down.
+		_insert5() {
+			this.parent.paintBlack();
+			this.grandparent.paintRed();
+			if (this.isLeftChild) {
+				this.grandparent.rotateRight();
+			} else {
+				this.grandparent.rotateLeft();
+			}
+			return;
+		}
+
+		insert(value) {
+			if (this.value === undefined) {
+				this.value = value;
+				this.paintBlack();
+				return;
+			}
+			let dir;
+			if (this.identifier(value) > this.identifier(this.value)) {
+				dir = RIGHT;
+			} else dir = LEFT;
+			if (this.children[dir] !== undefined) {
+				return this.children[dir].insert(value);
+			} else {
+				let child = new RedBlackTree(value, this.identifier, RED);
+				child.parent = this;
+				let parent = child.parent;
+				this.children[dir] = child;
+				child.paint();
+				return child;
+			}
+		}
+
+		remove(value) {
+			let identifiedValue = this.identifier(value);
+			let thisValue = this.identifier(this.value);
+			if (thisValue === identifiedValue) {
+				this.rmPaint(value);
+				return;
+			} else {
+				let dir;
+				if (thisValue < identifiedValue) dir = RIGHT;
+				else dir = LEFT;
+				if (this.children[dir] === undefined) return undefined;
+				else return this.children[dir].remove(value);
+			}
+		}
+
+		standardRemove(value) {
+			if (this.isLeaf) {
+				if (this.isRoot) {
+					this.value = undefined;
+					this.paintBlack();
+				} else if (this.isRightChild) {
+					this.parent.right = undefined;
+				} else if (this.isLeftChild) {
+					this.parent.left = undefined;
+				}
+			} else if (this.hasOneChild) {
+				let rmDir = this.right ? LEFT : RIGHT;
+				this.right ? this.rotateLeft() : this.rotateRight();
+				this.children[rmDir] = undefined;
+			} else if (this.hasTwoChildren) {
+				let replica = this.right._minimumChild();
+				this.value = replica.value;
+				this.right.remove(replica.value);
+			}
+		}
+
+		rmPaint(value) {
+			if (!this.hasTwoChildren) this._remove0();
+			this.standardRemove(value);
+		}
+		// This case is only called once when starting to remove values,
+		// and is not included in any recursive calls.
+		// If the removed node is red, or the child is red,
+		// then paint the child red and remove the node
+		// because no rules will be violated when it is removed.
+		// All subsequent cases therefore are guaranteed that the removed node is black.
+		_remove0() {
+			let childIsRed = this.hasOneChild ? (this.right ? this.right.isRed : this.left.isRed) : false;
+			if (this.isBlack) {
+				if (childIsRed) {
+					this.right ? this.right.paintBlack() : this.left.paintBlack();
+				} else {
+					if (this.parent ? this.parent.isBlack : false) {
+						this._remove1();
+					}
+				}
+			}
+		}
+		// If the removed node is the root,
+		// remove the value and ensure that it is black.
+		_remove1() {
+			if (this.parent !== undefined) this._remove2();
+		}
+		// If the removed node’s sibling is red,
+		// paint the parent red and the sibling black.
+		// Then, rotate the parent down and the sibling up,
+		// such that parent is still above the removed node.
+		// Now, the path that the removed node is on will be short one black node,
+		// so this case always continue to case three.
+		_remove2() {
+			let sib = this.sibling;
+			if (sib && sib.isRed) {
+				this.parent.paintRed();
+				sib.paintBlack();
+				if (this.isLeftChild) this.parent.rotateLeft();
+				else if (this.isRightChild) this.parent.rotateRight();
+			}
+			this._remove3();
+		}
+		// If the removed node’s sibling is black,
+		// then repaint the sibling red.
+		// This has the effect of reducing the number of black nodes
+		// on paths through the sibling to be reduced by one.
+		// When the node to be removed is removed,
+		// this will balance both sides of the parent
+		// to have the same number of black nodes.
+		// This still has the issue of paths which don’t pass
+		// through the parent will have one greater black node.
+		// By recursively call painting on the parent, the issue is fixed.
+		_remove3() {
+			let sib = this.sibling;
+			let sibIsBlack = sib ? sib.isBlack : true;
+			let sibLeftBlack = sib ? (sib.left ? sib.left.isBlack : true) : true;
+			let sibRightBlack = sib ? (sib.right ? sib.right.isBlack : true) : true;
+			if (this.parent.isBlack && sib && sibIsBlack && sibLeftBlack && sibRightBlack) {
+				sib.paintRed();
+				this.parent._remove1();
+			} else this._remove4();
+		}
+		// If the removed node’s sibling is black and the parent is red,
+		// swap the sibling and the parent’s colors.
+		// This makes it such the black nodes on paths
+		// through the sibling will remain the same,
+		// but the number of black nodes on the path through the removed node 
+		// will increase by one, and then decrease by one
+		// when the node is removed.
+		_remove4() {
+			let sib = this.sibling;
+			let sibIsBlack = sib ? sib.isBlack : true;
+			let sibLeftBlack = sib ? (sib.left ? sib.left.isBlack : true) : true;
+			let sibRightBlack = sib ? (sib.right ? sib.right.isBlack : true) : true;
+			if (this.parent.isRed && sib && sibIsBlack && sibLeftBlack && sibRightBlack) {
+				sib.paintRed();
+				this.parent.paintBlack();
+			} else this._remove5();
+		}
+		// If the removed node’s sibling is the right child, black,
+		// its left child is red, and the other is black
+		// (or vice-versa for directions), rotate the sibling right,
+		// and swap its color with the left child.
+		// This sets us up for sixth case, where the sibling is black,
+		// and its right child is red(if the sibling is a right child).
+		_remove5() {
+			let sib = this.sibling;
+			if (this.isLeftChild && (sib.right ? sib.right.isBlack : true) && (sib.left ? sib.left.isRed : false)) {
+				sib.paintRed();
+				sib.left.paintBlack();
+				sib.rotateRight();
+			} else if (this.isRightChild && (sib.left ? sib.left.isBlack : true) && sib.right ? sib.right.isRed : false) {
+				sib.paintRed();
+				sib.right.paintBlack();
+				sib.rotateLeft();
+			}
+			this._remove6();
+		}
+		// If the removed node’s sibling is the right child, black,
+		// its right child is red, rotate the parent left,
+		// and swap the sibling and the parent’s color.
+		// Then, paint the sibling(the new parent) black.
+		// That rotation added an extra black node to the path
+		// which the removed node was on, and retained the original color
+		// of the parent, ensuring all properties were retained.
+		_remove6() {
+			let sib = this.sibling;
+			if (sib) this.parent.isBlack ? sib.paintBlack() : sib.paintRed(); this.parent.paintBlack();
+			if (this.isLeftChild) {
+				sib.right.paintBlack();
+				this.parent.rotateLeft();
+			} else {
+				sib.left.paintBlack();
+				this.parent.rotateRight();
+			}
+		}
+
+		countBlackToRoot(count=0) {
+			if (this.parent === undefined) return count;
+			else {
+				return this.isBlack ? this.parent.countBlackToRoot(count+1) : this.parent.countBlackToRoot(count);
+			}
+		}
+	}
 </code>
 
+		<h3 id="hash">7. Hash Table</h3>
+		<p><b>Idea:</b></p>
+
 		<script>
-			// https://www.youtube.com/watch?v=UaLIHuR1t8Q
-			// https://www.youtube.com/watch?v=CTvfzU_uNKE
-
-			// In Red-Black tree, we use 2 tools to do balancing:
-			// 1) recoloring
-			// 2) rotation
-			// Notation: new node X, it's parent P, grandparent G, uncle U
-
-			// The insertion algorithm has 2 main cases
-			// depending on the color of U:
-			// 1) if U = red, we do recoloring
-			// 2) if U = black, we do rotations and/or recoloring
 			
-			// Insertion algorithm:
-			// 1. Insert new node X and color it red
-			// 2. Recolor and rotate nodes to fix violations
-			// Four cases:
-			// 1) X = root -> color black
-			// 2) X.U = red -> recolor P, G, U
-			// 3) X.U = black (triangle) -> rotate X.P
-			// 4) X.U = black (line) -> rotate X.G & recolor
-
-			// Deletion algorithm:
-			// 1. Find the node to be deleted X using BST traversal
-			// 2. If X has 2 non-null children,
-			// replace it with its inorder successor,
-			// then delete successor
-			// 3. If X is red, delete it
-			// 4. If X is black with one red child,
-			// replace it with that child and
-			// change color of the child to black
-			// 5. Otherwise (X is black with 2 black null leaves)
-			// handle the double-black node situation with 6 cases
-
 		</script>
 
 	</body>
