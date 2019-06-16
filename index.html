@@ -48,6 +48,11 @@
 				<li><a href="#bst">Binary Search Tree</a></li>
 				<li><a href="#rbt">Red-Black Tree</a></li>
 				<li><a href="#hash">Hash Table</a></li>
+				<li><a href="#trie">Trie</a></li>
+				<!-- https://medium.com/@alexanderv/tries-javascript-simple-implementation-e2a4e54e4330 -->
+				<!-- https://gist.github.com/tpae/72e1c54471e88b689f85ad2b3940a8f0 -->
+				<li><a href="#graph">Graph</a></li>
+				<li><a href="#chain">Blockchain</a></li>
 			</ol>
 		</div>
 
@@ -998,9 +1003,24 @@
 </code>
 
 		<h3 id="hash">7. Hash Table</h3>
-		<p><b>Idea:</b></p>
+		<p><b>Idea:</b> A hash table is a data structure that implements an associative array - a structure that can map keys to values. It uses a <b>hash function</b> to compute an index into an array of <b>buckets</b>, where the desired value can be found.<br>
+		Ideally, the hash function will assign each key to a unique bucket, but most hash table designs use an imperfect hash function, which might cause <b>collisions</b> where the hash function generates the same index for more than one key. Such collisions must be resolved in some way (probing, chaining, etc).<br>
+		Search, insertion and deletion is O(1) in average case and O(n) in worst case. Space complexity is O(n).</p>
+<code>
+	
+</code>
 
 		<script>
+			// https://www.youtube.com/watch?v=KyUTuwz_b7Q
+
+
+			// Hashing is often done in two steps:
+			// hash = hashfunc(key)
+			// index = hash % array_size
+			// The hash is independent of the array size,
+			// and it is then reduced to an index
+			// (a number between 0 and array_size − 1)
+			// using the modulo operator (%).
 			
 		</script>
 
