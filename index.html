@@ -49,8 +49,6 @@
 				<li><a href="#rbt">Red-Black Tree</a></li>
 				<li><a href="#hash">Hash Table</a></li>
 				<li><a href="#trie">Trie</a></li>
-				<!-- https://medium.com/@alexanderv/tries-javascript-simple-implementation-e2a4e54e4330 -->
-				<!-- https://gist.github.com/tpae/72e1c54471e88b689f85ad2b3940a8f0 -->
 				<li><a href="#graph">Graph</a></li>
 				<li><a href="#chain">Blockchain</a></li>
 			</ol>
@@ -1007,21 +1005,143 @@
 		Ideally, the hash function will assign each key to a unique bucket, but most hash table designs use an imperfect hash function, which might cause <b>collisions</b> where the hash function generates the same index for more than one key. Such collisions must be resolved in some way (probing, chaining, etc).<br>
 		Search, insertion and deletion is O(1) in average case and O(n) in worst case. Space complexity is O(n).</p>
 <code>
+	// https://www.youtube.com/watch?v=KyUTuwz_b7Q
+	// https://www.hackerearth.com/ru/practice/data-structures/hash-tables/basics-of-hash-tables/tutorial/
+	// https://gist.github.com/alexhawkins/f6329420f40e5cafa0a4
+
+	// Hashing is often done in two steps:
+	// hash = hashfunc(key)
+	// index = hash % array_size
+	// The hash is independent of the array size,
+	// and it is then reduced to an index
+	// (a number between 0 and array_size − 1)
+	// using the modulo operator (%).
+	
+	// Hash Table (simple)
+	var HashTable = function(maxSize=101) {
+		this.maxSize = maxSize;
+		this.storage = new Array(maxSize);
+		// counts amount of buckets to decide if resizing is needed
+		this.counter = 0;
+	};
+	// Hashing function
+	HashTable.prototype.hashFunc = function(str, max) {
+		var index = 0; // hash index
+		for (var i = 0; i < str.length; i++) {
+			var char = str[i];
+			index = (index << 5) + char.charCodeAt(0);
+			index = (index & index) % max;
+		}
+		return index;
+	};
+	// insert data
+	HashTable.prototype.insert = function(key, value) {
+		var index = this.hashFunc(key, this.maxSize);
+		//retrieve the bucket at this index in storage, if one exists
+		// [ [[k,v], [k,v], [k,v]], [[k,v], [k,v]], [[k,v] ]]
+		var bucket = this.storage[index];
+		if (!bucket) {
+			var bucket = [];
+			this.storage[index] = bucket;
+		}
+		// iterate through bucket to see if there are any conflicts
+		// if there are any, override them
+		var override = false;
+		for (let i = 0; i < bucket.length; i++) {
+			var tuple = bucket[i];
+			if (tuple[0] === key) { // tuple[0] is key
+				tuple[1] = value; // tuple[1] is value
+				override = true;
+			}
+		}
+		if (!override) {
+			// create new tuple in the bucket
+			bucket.push([key, value]);
+			this.counter++;
+			// check if storage resizing is needed
+			if (this.counter > this.maxSize * 0.75) {
+				this.resize(this.maxSize * 2);
+			}
+		}
+		return this;
+	};
+	// remove data
+	HashTable.prototype.remove = function(key) {
+		var index = this.hashFunc(key, this.maxSize);
+		var bucket = this.storage[index];
+		if (!bucket) return null;
+		for (var i = 0; i < bucket.length; i++) {
+			var tuple = bucket[i];
+			// check if key is inside the bucket
+			if (tuple[0] === key) {
+				// if it is, remove this tuple
+				bucket.splice(i, 1);
+				this.counter--;
+				if (this.counter < this.maxSize * 0.25) {
+					this.resize(this.maxSize / 2);
+				}
+				return tuple[1];
+			}
+		}
+	};
+	// resize hash table if it's too big or too small
+	HashTable.prototype.resize = function(newSize) {
+		var oldStorage = this.storage;
+		this.maxSize = newSize;
+		this.storage = new Array(newSize);
+		this.counter = 0;
+		oldStorage.forEach(function(bucket) {
+			if (!bucket) return;
+			for (var i = 0; i < bucket.length; i++) {
+				var tuple = bucket[i];
+				this.insert(tuple[0], tuple[1]);
+			}
+		}.bind(this));
+	};
+	// retrieve a record from a table
+	HashTable.prototype.get = function(key) {
+		var index = this.hashFunc(key, this.maxSize);
+		var bucket = this.storage[index];
+		if (!bucket) return null;
+		for (var i = 0; i < bucket.length; i++) {
+			var tuple = bucket[i];
+			if (tuple[0] === key) return tuple[1];
+		}
+		return null;
+	};
+	HashTable.prototype.getAll = function() {
+		for (var i = 0; i < this.maxSize; i++) {
+			if (this.storage[i]) {
+				this.storage[i].forEach(function(element) {
+					console.log(element[0], element[1]);
+				});
+			}
+		}
+	}
+</code>
+
+		<h3 id="trie">8. Trie</h3>
+		<p><b>Idea:</b> A</p>
+<code>
+	
+</code>
+
+		<h3 id="graph">9. Graph</h3>
+		<p><b>Idea:</b> A</p>
+<code>
+	
+</code>
+
+		<h3 id="chain">10. Blockchain</h3>
+		<p><b>Idea:</b> A</p>
+<code>
 	
 </code>
 
 		<script>
-			// https://www.youtube.com/watch?v=KyUTuwz_b7Q
+			// https://medium.com/@alexanderv/tries-javascript-simple-implementation-e2a4e54e4330
+			// https://gist.github.com/tpae/72e1c54471e88b689f85ad2b3940a8f0
 
-
-			// Hashing is often done in two steps:
-			// hash = hashfunc(key)
-			// index = hash % array_size
-			// The hash is independent of the array size,
-			// and it is then reduced to an index
-			// (a number between 0 and array_size − 1)
-			// using the modulo operator (%).
-			
 		</script>
 
 	</body>
