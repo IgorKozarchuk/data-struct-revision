@@ -47,8 +47,8 @@
 				<li><a href="#stack">Stack</a></li>
 				<li><a href="#bst">Binary Search Tree</a></li>
 				<li><a href="#rbt">Red-Black Tree</a></li>
-				<li><a href="#hash">Hash Table</a></li>
 				<li><a href="#trie">Trie</a></li>
+				<li><a href="#hash">Hash Table</a></li>
 				<li><a href="#graph">Graph</a></li>
 				<li><a href="#chain">Blockchain</a></li>
 			</ol>
@@ -1000,7 +1000,89 @@
 	}
 </code>
 
-		<h3 id="hash">7. Hash Table</h3>
+		<h3 id="trie">7. Trie</h3>
+		<p><b>Idea:</b> A trie (after the middle syllable of reTRIEval) (alse called prefix tree) is an ordered search tree used to store a dynamic set or associative array where the keys are usually strings. Unlike a binary search tree, no node in the tree stores the key associated with that node; instead, its position in the tree defines the key with which it is associated. All the descendants of a node have a common prefix of the string associated with that node, and the root is associated with the empty string. Keys tend to be associated with leaves, though some inner nodes may correspond to keys of interest.</p>
+<code>
+	// https://www.youtube.com/watch?v=AXjmTQ8LEoI
+	// https://www.youtube.com/watch?v=CX777rfuZtM
+	
+	// Trie node
+	class TrieNode {
+		constructor(char = "") {
+			this.value = char;
+			this.children = {}; // children nodes
+			this.isEndWord = false; // whether the node completes a word
+		}
+	}
+	// Trie
+	class Trie {
+		constructor() {
+			this.rootNode = new TrieNode();
+		}
+
+		insert(word) {
+			var node = this.rootNode;
+			// iterate through word
+			for (var i = 0; i < word.length; i++) {
+				var currChar = word[i];
+				// map word's chars to a path in the tree
+				if (node.children[currChar]) {
+					node = node.children[currChar];
+				} else { // if no path exists, create one
+					var newNode = new TrieNode(currChar);
+					node.children[currChar] = newNode;
+					node = newNode;
+				}
+			}
+			// indicate that the last char of word completes a string
+			node.isEndWord = true;
+		}
+
+		find(word) {
+			var node = this.rootNode;
+			for (var i = 0; i < word.length; i++) {
+				var currChar = word[i];
+				if (node.children[currChar]) {
+					node = node.children[currChar];
+				} else {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		remove(word) {
+			var node = this.rootNode;
+			// remove only unique suffixes of word
+			var suffixes = [];
+			// no part of word can be removed from trie
+			for (var i = 0; i < word.length; i++) {
+				var currChar = word[i];
+				if (node.children[currChar]) {
+					node = node.children[currChar];
+					suffixes.unshift(node);
+					if (i === word.length && Object.keys(node.children).length) {
+						return "Suffixes in trie depend on '" + word + "'";
+					}
+				}
+			}
+			// some parts of word can be removed from trie
+			for (var j = 1; j < suffixes.length; j++) {
+				var parent = suffixes[j];
+				var child = word[suffixes.length - j];
+				delete parent.children[child];
+				if (parent.isEndWord || Object.keys(parent.children).length) {
+					return "Some suffixes of '" + word + "' removed from trie";
+				}
+			}
+			// all parts of word can be removed from trie
+			delete this.rootNode.children[word[0]];
+			return "Removed '" + word + "'. No other '" + word[0] + "' words remain";
+		}
+	}
+</code>
+
+		<h3 id="hash">8. Hash Table</h3>
 		<p><b>Idea:</b> A hash table is a data structure that implements an associative array - a structure that can map keys to values. It uses a <b>hash function</b> to compute an index into an array of <b>buckets</b>, where the desired value can be found.<br>
 		Ideally, the hash function will assign each key to a unique bucket, but most hash table designs use an imperfect hash function, which might cause <b>collisions</b> where the hash function generates the same index for more than one key. Such collisions must be resolved in some way (probing, chaining, etc).<br>
 		Search, insertion and deletion is O(1) in average case and O(n) in worst case. Space complexity is O(n).</p>
@@ -1120,12 +1202,6 @@
 	}
 </code>
 
-		<h3 id="trie">8. Trie</h3>
-		<p><b>Idea:</b> A</p>
-<code>
-	
-</code>
-
 		<h3 id="graph">9. Graph</h3>
 		<p><b>Idea:</b> A</p>
 <code>
@@ -1133,15 +1209,13 @@
 </code>
 
 		<h3 id="chain">10. Blockchain</h3>
-		<p><b>Idea:</b> A</p>
+		<p><b>Idea:</b> </p>
 <code>
 	
 </code>
 
 		<script>
-			// https://medium.com/@alexanderv/tries-javascript-simple-implementation-e2a4e54e4330
-			// https://gist.github.com/tpae/72e1c54471e88b689f85ad2b3940a8f0
-
+			
 		</script>
 
 	</body>
