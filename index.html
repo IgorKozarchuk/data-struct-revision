@@ -1344,14 +1344,74 @@
 </code>
 
 		<h3 id="chain">10. Blockchain</h3>
-		<p><b>Idea:</b> </p>
+		<p><b>Idea:</b> A blockchain is a continuously growing list of records, called blocks, which are linked and secured using cryptography. Each block contains a cryptographic hash of the previous block, a timestamp and transaction data.<br>
+		By design, a blockchain is resistant to modification of the data. It is an open, decentralized and distributed ledger typically managed by a peer-to-peer network collectively. Once recorded, the data in any given block cannot be altered retroactively without alteration of all subsequent blocks, which requires consensus of the network majority.</p>
 <code>
-	
+	// https://www.youtube.com/watch?v=SSo_EIwHSd4
+	// https://www.youtube.com/watch?v=zVqczFZr124
+	// https://www.youtube.com/watch?v=HneatE69814
+
+	// Blockchain implementation (with Proof-of-Work)
+
+	// import SHA256 crypto function
+	// (available after installing crypto-js via npm)
+	const SHA256 = require("crypto-js/sha256.js");
+
+	class Block {
+		constructor(timestamp, data, prevHash = "") {
+			this.timestamp = timestamp;
+			this.data = data;
+			this.prevHash = prevHash;
+			this.hash = this.calculateHash();
+			// number which has nothing to do with a block
+			// but is changed while mining block to a given difficulty
+			// (calculating hash with certain amount of 0s)
+			// as we can't change timestamp, data, prevHash
+			this.nonce = 0;
+		}
+		calculateHash() {
+			return SHA256(this.timestamp + JSON.stringify(this.data) + this.prevHash + this.nonce).toString();
+		}
+		mineBlock(difficulty) {
+			// while amount of 0s in hash != to difficulty (proof of work)
+			while (this.hash.substring(0, difficulty) !== new Array(difficulty+1).join("0")) {
+				this.nonce++;
+				this.hash = this.calculateHash();
+			}
+			console.log("Block mined: " + this.hash);
+		}
+	}
+
+	class Blockchain {
+		constructor() {
+			this.chain = [this.createGenesisBlock()];
+			this.difficulty = 4; // amount of 0s in hash - proof of work
+		}
+		createGenesisBlock() { // 1st block in the blockchain
+			return new Block("01/01/2017", "Genesis Block", "0");
+		}
+		getLatestBlock() {
+			return this.chain[this.chain.length-1];
+		}
+		addBlock(newBlock) {
+			newBlock.prevHash = this.getLatestBlock().hash;
+			newBlock.mineBlock(this.difficulty);
+			this.chain.push(newBlock);
+		}
+		isChainValid() {
+			for (var i = 1; i < this.chain.length; i++) {
+				const currentBlock = this.chain[i];
+				const prevBlock = this.chain[i-1];
+				if (currentBlock.hash !== currentBlock.calculateHash()) {
+					return false;
+				}
+				if (currentBlock.prevHash !== prevBlock.hash) {
+					return false;
+				}
+				return true;
+			}
+		}
+	}
 </code>
-
-		<script>
-			
-		</script>
-
 	</body>
 </html>
